@@ -4,10 +4,29 @@
 //|              https://github.com/gmakhobe/MQL5_Link_Ol_Trading_EA |
 //+------------------------------------------------------------------+
 
+#define EXPERT_KEY      71311181525;
 //--- EA Imports
 #include "mylib.mqh"
 //--- System Input
-input ENUM_TIMEFRAMES   EA_Timeframe = PERIOD_H4;
+input string            EA_Passcode_settings = "===EA Passcode Settings==="; // ===EA Passcode Settings===
+input string            EA_Passcode = ""; // Please enter Passcode from dashboard
+/* Timeframe */
+input string            Timeframe_To_Use = "===Timeframe To Use==="; // ===Timeframe To Use===
+input ENUM_TIMEFRAMES   EA_Timeframe = PERIOD_H4; // Timeframe To Use:
+/* Days to trade */
+input string            Days_To_Trade = "===Days To Trade==="; // ===Days To Trade===
+input bool              Trade_On_Monday = true; // Shoud The EA Trade On Monday
+input bool              Trade_On_Tuesday = true; // Shoud The EA Trade On Tuesday 
+input bool              Trade_On_Wednesday = true; // Shoud The EA Trade On Wednesday 
+input bool              Trade_On_Thursday = true; // Shoud The EA Trade On Thursday 
+input bool              Trade_On_Friday = true; // Shoud The EA Trade On Friday 
+input bool              Trade_On_Saturday = true; // Shoud The EA Trade On Saturday 
+input bool              Trade_On_Sunday = true; // Shoud The EA Trade On Sunday
+/* Sessions To Trade */
+input string            Sessions_To_Trade = "===Sessions To Trade==="; // ===Sessions To Trade===
+input bool              Trade_On_Asian_Session = true; // Shoud The EA Trade During Asian Session
+input bool              Trade_On_London_Session = true; // Shoud The EA Trade During London Session
+input bool              Trade_On_NewYork_Session = true; // Shoud The EA Trade During New York Session
 //--- Handlers
 int                     HandlerSuperTrend;
 int                     HandlerStochasticRSI;
@@ -38,6 +57,8 @@ bool                    IsTradeSell = NULL;
 //+------------------------------------------------------------------+
 int OnInit()
   {
+  
+   unlockEAWithPassCode("123456789");
    HandlerSuperTrend = iCustom(Symbol(), EA_Timeframe, "SuperTrend", SuperTrendLookBackPeriod, SuperTrendMultiplier);
    HandlerStochasticRSI = iCustom(Symbol(), EA_Timeframe, "StochasticRSI", StochasticRSILookBbackPeriod, EA_Timeframe);
    HandlerTradeDynamicIndex = iCustom(Symbol(), EA_Timeframe, "DynamicTradersIndex", TradeDynamicIndexRSILookBack, TradeDynamicIndexPriceLineLookBack, TradeDynamicIndexTradeSignalLineLookBack, TradeDynamicIndexMarketBaseLineLookBack, EA_Timeframe);
@@ -98,7 +119,7 @@ void OnTick()
 
    MqlRates priceRates[];
 
-   datetime localTime = TimeLocal();
+   datetime localTime = TimeGMT();
 
    MqlDateTime localTimeStruct;
 
@@ -170,12 +191,23 @@ void OnTick()
 
       PreviousTimeSaved = priceRates[0].time;
       
+      if (!canTradeToday())
+      {
+         IsTradeBuy = false;
+         IsTradeSell = false;
+      }
+      if (!canTradeSession())
+      {
+         IsTradeBuy = false;
+         IsTradeSell = false;
+      }
+      
       buyMarket(averageTrueRangeStop[0]);
       sellMarket(averageTrueRangeStop[0]);
      }
 
 //---Enable can open trades
-   if(localTimeStruct.hour == 8 && CanOpenTrade == false && DayOfOpeningTrade != localTimeStruct.day)
+   if(localTimeStruct.hour == 0 && CanOpenTrade == false && DayOfOpeningTrade != localTimeStruct.day)
      {
       CanOpenTrade = true;
      }
@@ -183,6 +215,84 @@ void OnTick()
   }
 //+------------------------------------------------------------------+
 
+
+bool canTradeSession()
+{
+   MqlDateTime dateStruct;
+   
+   datetime currentGMTTime = TimeGMT();
+   
+   if (!TimeToStruct(currentGMTTime, dateStruct)) return false;
+   
+   if (dateStruct.hour >= 0 && dateStruct.hour < 7)
+   {
+      // Trade Asia
+      return (Trade_On_Asian_Session ? true: false);
+   }
+   else if (dateStruct.hour >= 7 && dateStruct.hour < 13)
+   {
+      // Trade London
+      return (Trade_On_London_Session ? true: false);
+   }
+   else if (dateStruct.hour >= 13 && dateStruct.hour < 22)
+   {
+       // Trade New York
+      return (Trade_On_NewYork_Session ? true: false);
+   }
+   else
+   {
+      return false;
+   }
+   
+   return false;
+}
+
+
+bool canTradeToday()
+{
+   MqlDateTime dateStruct;
+   
+   datetime currentGMTTime = TimeGMT();
+   
+   if (!TimeToStruct(currentGMTTime, dateStruct)) return false;
+  //--- Monday
+  if (dateStruct.day_of_week == 1)
+  {
+      return (Trade_On_Monday? true: false);
+  }
+  //--- Tuesday
+  if (dateStruct.day_of_week == 2)
+  {
+      return (Trade_On_Tuesday? true: false);
+  }
+  //--- Wednesday
+  if (dateStruct.day_of_week == 3)
+  {
+      return (Trade_On_Wednesday? true: false);
+  }
+  //--- Thursday
+  if (dateStruct.day_of_week == 4)
+  {
+      return (Trade_On_Thursday? true: false);
+  }
+  //--- Friday
+  if (dateStruct.day_of_week == 5)
+  {
+      return (Trade_On_Friday? true: false);
+  }
+  //--- Saturday
+  if (dateStruct.day_of_week == 6)
+  {
+      return (Trade_On_Saturday? true: false);
+  }
+  //--- Sunday
+  if (dateStruct.day_of_week == 0)
+  {
+      return (Trade_On_Sunday? true: false);
+  }
+  
+  return false;
+}
 
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -221,4 +331,11 @@ void sellMarket(double tradeStopLoss)
 
    IsTradeSell = false;
   }
+  
+  
+ bool unlockEAWithPassCode(string passCode)
+ {
+   Print("String Data: ", StringSubstr(passCode,8,1));
+   return true;
+ }
 //+------------------------------------------------------------------+

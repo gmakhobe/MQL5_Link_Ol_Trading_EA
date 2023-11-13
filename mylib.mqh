@@ -191,7 +191,7 @@ void lmg_simpleMovingAverageData(
  */
 int symbolDecimalType(void)
 {
-   string symbols[20] = {
+   string symbols[22] = {
       "NZDJPY",
       "CADJPY",
       "CHFJPY",
@@ -211,9 +211,11 @@ int symbolDecimalType(void)
       "NASUSD",
       "NAS100",
       "US100.cash",
-      "US30.cash"
+      "US30.cash",
+      "US500.cash",
+      "US2000.cash"
       };
-   int symbolDecimals[20] = {
+   int symbolDecimals[22] = {
       2/*NZDJPY*/,
       2/*CADJPY*/,
       2/*CHFJPY*/,
@@ -233,7 +235,9 @@ int symbolDecimalType(void)
       0/*NASUSD-Khwezi*/,
       0/*NASUSD-MyForexFunds*/,
       0/*NASUSD-FTMO*/,
-      0/*DowJones-FTMO*/
+      0/*DowJones-FTMO*/,
+      0/*S&P-FTMO*/,
+      0/*Russel-FTMO*/
       };
    int results = 0;
 
@@ -637,7 +641,7 @@ double onPositionSizeCalculate(double percentageToRisk_, double stopLossPips_)
    double _pipValue = SymbolInfoDouble(Symbol(), SYMBOL_TRADE_TICK_VALUE) * 10;
    double _accountPercentage = _accountBalance * _percentage;
 
-   if(Symbol() == "USTECm" || Symbol() == "NASUSD" || Symbol() == "NAS100" || Symbol() == "US100.cash" || Symbol() == "US30.cash")
+   if(Symbol() == "USTECm" || Symbol() == "NASUSD" || Symbol() == "NAS100" || Symbol() == "US100.cash" || Symbol() == "US30.cash" || Symbol() == "US500.cash" || Symbol() == "US2000.cash")
      {
       return ((_accountPercentage)/(stopLossPips_ * _pipValue)) / 10;
      }
